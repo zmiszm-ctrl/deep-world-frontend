@@ -31,6 +31,8 @@ export default function LoginPage() {
         throw new Error(data.error || '登录失败');
       }
 
+      console.log('✅ 登录成功，准备跳转到 /dashboard');
+      
       // 登录成功，跳转到仪表盘
       router.push('/dashboard');
     } catch (err: any) {

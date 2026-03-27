@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     // 设置 HTTP-only Cookie
     response.cookies.set('auth-token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true, // Vercel 生产环境必须
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60, // 7 天
       path: '/',
