@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id             String      @id @default(uuid())
+  email          String      @unique
+  password       String      // bcrypt 加密后的密码
+  nickname       String?
+  avatar         String?     // 用户头像
+  points         Int         @default(10)  // 初始 10 积分
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  avatars        Avatar[]
+  pointsLogs     PointsLog[]
+
+  @@index([email])
+}
+
+// 虚拟形象表
+model Avatar {
+  id             String      @id @default(uuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  type           String      // person|animal|virtual
+  style          String      // anime|cartoon|realistic|pixel
+  gender         String      // male|female|other
+  age            Int
+  imageUrl       String
+  statusId       String
+  status         Status      @relation(fields: [statusId], references: [id])
+  currentMessage String?
+  personalityId  String
+  personality    Personality @relation(fields: [personalityId], references: [id])
+  positionX      Float       @default(50)
+  positionY      Float       @default(50)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([userId])
+}
+
+// 状态表（预定义）
+model Status {
+  id          String    @id
+  name        String
+  emoji       String
+  description String
+  duration    Int       // 持续时间（分钟）
+  avatars     Avatar[]
+
+  @@map("statuses")
+}
+
+// 性格表（预定义）
+model Personality {
+  id          String    @id
+  name        String
+  traits      String    // JSON 数组，存储特征列表
+  color       String
+  avatars     Avatar[]
+
+  @@map("personalities")
+}
+
+// 积分流水表
+model PointsLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarId  String?
+  change    Int      // 积分变化（正数增加，负数减少）
+  reason    String   // 变化原因
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("points_logs")
+}
