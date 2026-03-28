@@ -302,8 +302,8 @@ export default function WorldContent() {
                 </div>
                 {/* 状态 - 缩小版，在名字下面 */}
                 <div className="text-[9px] text-gray-300/80 px-1 py-0.5 bg-black/30 rounded backdrop-blur-sm flex items-center justify-center gap-0.5">
-                  <span className="text-[8px]">{avatar.currentStatus.emoji}</span>
-                  <span>{avatar.currentStatus.name}</span>
+                  <span className="text-[8px]">{(avatar.currentStatus?.emoji || '😊')}</span>
+                  <span>{(avatar.currentStatus?.name || '开心')}</span>
                 </div>
               </div>
 
