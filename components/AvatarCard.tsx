@@ -10,7 +10,25 @@ interface AvatarCardProps {
 export default function AvatarCard({ avatar }: AvatarCardProps) {
   // 安全检查：确保关联数据存在
   const currentStatus = avatar.currentStatus || { emoji: '😊', name: '开心' };
-  const personality = avatar.personality || { traits: ['友好'], color: '#6366f1' };
+  
+  // personality.traits 可能是字符串（JSON）或数组，需要解析
+  let personalityTraits: string[] = ['友好'];
+  let personalityColor = '#6366f1';
+  
+  if (avatar.personality) {
+    personalityColor = avatar.personality.color || '#6366f1';
+    // 如果 traits 是字符串，解析 JSON
+    if (typeof avatar.personality.traits === 'string') {
+      try {
+        personalityTraits = JSON.parse(avatar.personality.traits);
+      } catch (e) {
+        console.warn('解析 personality.traits 失败:', e);
+        personalityTraits = ['友好'];
+      }
+    } else if (Array.isArray(avatar.personality.traits)) {
+      personalityTraits = avatar.personality.traits;
+    }
+  }
   
   return (
     <div className="glass-card p-6 avatar-container">
@@ -60,11 +78,11 @@ export default function AvatarCard({ avatar }: AvatarCardProps) {
       <div className="mb-4">
         <div className="text-xs text-gray-400 mb-1">性格</div>
         <div className="flex flex-wrap gap-1">
-          {personality.traits.map((trait, index) => (
+          {personalityTraits.map((trait: string, index: number) => (
             <span
               key={index}
               className="px-2 py-1 rounded text-xs"
-              style={{ backgroundColor: personality.color + '30', color: personality.color }}
+              style={{ backgroundColor: personalityColor + '30', color: personalityColor }}
             >
               {trait}
             </span>
