@@ -1,5 +1,5 @@
-// 强制在静态生成时跳过 SSR
-export const dynamic = 'force-static';
+// 强制使用客户端渲染（因为需要访问 Cookie 和 localStorage）
+export const dynamic = 'force-dynamic';
 
 import WorldContent from './WorldContent';
 
