@@ -8,12 +8,16 @@ interface AvatarCardProps {
 }
 
 export default function AvatarCard({ avatar }: AvatarCardProps) {
+  // 安全检查：确保关联数据存在
+  const currentStatus = avatar.currentStatus || { emoji: '😊', name: '开心' };
+  const personality = avatar.personality || { traits: ['友好'], color: '#6366f1' };
+  
   return (
     <div className="glass-card p-6 avatar-container">
       {/* 状态气泡 */}
       <div className="status-bubble">
-        <span>{avatar.currentStatus.emoji}</span>
-        <span className="ml-2">{avatar.currentStatus.name}</span>
+        <span>{currentStatus.emoji}</span>
+        <span className="ml-2">{currentStatus.name}</span>
       </div>
 
       {/* 虚拟形象图片 */}
@@ -56,11 +60,11 @@ export default function AvatarCard({ avatar }: AvatarCardProps) {
       <div className="mb-4">
         <div className="text-xs text-gray-400 mb-1">性格</div>
         <div className="flex flex-wrap gap-1">
-          {avatar.personality.traits.map((trait, index) => (
+          {personality.traits.map((trait, index) => (
             <span
               key={index}
               className="px-2 py-1 rounded text-xs"
-              style={{ backgroundColor: avatar.personality.color + '30', color: avatar.personality.color }}
+              style={{ backgroundColor: personality.color + '30', color: personality.color }}
             >
               {trait}
             </span>
