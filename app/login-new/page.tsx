@@ -18,6 +18,8 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
+    console.log('🔵 开始登录:', formData.email);
+
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -25,17 +27,30 @@ export default function LoginPage() {
         body: JSON.stringify(formData),
       });
 
+      console.log('📡 响应状态:', response.status);
+      console.log('📡 响应头:', response.headers.get('content-type'));
+
       const data = await response.json();
+      console.log('📦 响应数据:', data);
 
       if (!response.ok) {
+        console.error('❌ 登录失败:', data.error);
         throw new Error(data.error || '登录失败');
       }
 
       console.log('✅ 登录成功，准备跳转到 /dashboard');
+      console.log('🔄 当前 router 状态:', router);
       
       // 登录成功，跳转到仪表盘
+      console.log('🚀 执行 router.push("/dashboard")');
       router.push('/dashboard');
+      
+      // 验证是否跳转
+      setTimeout(() => {
+        console.log('📍 当前 URL:', window.location.href);
+      }, 1000);
     } catch (err: any) {
+      console.error('💥 登录异常:', err);
       setError(err.message || '登录失败，请稍后重试');
     } finally {
       setLoading(false);

@@ -14,16 +14,34 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = getUser();
-    if (!currentUser) {
-      router.push('/login-new');
-      return;
-    }
+    // 从 API 获取当前用户信息
+    const fetchUser = async () => {
+      try {
+        console.log('📡 请求 /api/auth/me 获取用户信息');
+        const response = await fetch('/api/auth/me');
+        
+        if (!response.ok) {
+          console.log('⚠️ 未授权，跳转到登录页');
+          router.push('/login-new');
+          return;
+        }
+        
+        const data = await response.json();
+        console.log('✅ 获取到用户信息:', data.user);
+        
+        setUser(data.user);
+        
+        // TODO: 稍后从 API 获取头像列表
+        const avatarsList: Avatar[] = [];
+        setAvatars(avatarsList);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('💥 获取用户失败:', error);
+        router.push('/login-new');
+      }
+    };
     
-    setUser(currentUser);
-    const avatarsList = getAvatars();
-    setAvatars(avatarsList);
-    setIsLoading(false);
+    fetchUser();
   }, [router]);
 
   if (isLoading) {
