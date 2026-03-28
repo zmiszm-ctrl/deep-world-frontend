@@ -41,6 +41,17 @@ export default function LoginPage() {
       console.log('✅ 登录成功，准备跳转到 /dashboard');
       console.log('🔄 当前 router 状态:', router);
       
+      // 登录成功后，保存用户信息到 localStorage（用于兼容现有功能）
+      if (typeof window !== 'undefined' && data.user) {
+        const storageData = {
+          user: data.user,
+          avatars: [],
+          pointsLogs: [],
+        };
+        localStorage.setItem('deep-world-data', JSON.stringify(storageData));
+        console.log('💾 用户信息已保存到 localStorage');
+      }
+      
       // 登录成功，跳转到仪表盘
       console.log('🚀 执行 router.push("/dashboard")');
       router.push('/dashboard');

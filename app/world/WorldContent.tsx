@@ -27,21 +27,29 @@ export default function WorldContent() {
   useEffect(() => {
     if (!isClient) return;
     
-    const user = getUser();
-    if (!user) {
-      router.push('/login-new');
-      return;
-    }
+    const checkAuthAndLoadData = async () => {
+      try {
+        // 先检查用户是否登录（通过 API）
+        const userResponse = await fetch('/api/auth/me');
+        if (!userResponse.ok) {
+          console.log('⚠️ 未授权，跳转到登录页');
+          router.push('/login-new');
+          return;
+        }
+        
+        const userData = await userResponse.json();
+        console.log('✅ 用户已认证:', userData.user);
+        
+        // 从 localStorage 获取用户的虚拟形象（兼容模式）
+        const avatars = getAvatars();
+        setUserAvatars(avatars);
 
-    const avatars = getAvatars();
-    setUserAvatars(avatars);
-
-    // 如果 URL 指定了虚拟形象，使用该形象；否则使用第一个
-    if (avatarId && avatars.find(a => a.id === avatarId)) {
-      setSelectedAvatarId(avatarId);
-    } else if (avatars.length > 0) {
-      setSelectedAvatarId(avatars[0].id);
-    }
+        // 如果 URL 指定了虚拟形象，使用该形象；否则使用第一个
+        if (avatarId && avatars.find(a => a.id === avatarId)) {
+          setSelectedAvatarId(avatarId);
+        } else if (avatars.length > 0) {
+          setSelectedAvatarId(avatars[0].id);
+        }
 
     // 模拟其他用户的虚拟形象
     const mockNames = [
@@ -103,6 +111,13 @@ export default function WorldContent() {
     }));
 
     setAllAvatars([...avatars, ...mockAvatars]);
+      } catch (error) {
+        console.error('💥 初始化失败:', error);
+        router.push('/login-new');
+      }
+    };
+    
+    checkAuthAndLoadData();
   }, [avatarId, isClient, router]);
 
   // AI 自动语句更新（每 3 分钟）

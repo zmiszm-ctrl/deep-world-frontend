@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUser, addAvatar, generateId, getRandomStatus, getRandomPersonality, generateAIMessage } from '@/lib/storage';
 import { Avatar } from '@/types';
@@ -9,6 +9,7 @@ export default function CreateAvatarPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [uploading, setUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     type: 'person' as 'person' | 'animal' | 'virtual',
@@ -17,6 +18,43 @@ export default function CreateAvatarPage() {
     age: 18,
     imageUrl: '',
   });
+
+  // 检查用户是否登录
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (!response.ok) {
+          console.log('⚠️ 未授权，跳转到登录页');
+          router.push('/login-new');
+          return;
+        }
+        
+        const data = await response.json();
+        console.log('✅ 用户已认证:', data.user);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('💥 检查认证失败:', error);
+        router.push('/login-new');
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <svg className="animate-spin h-12 w-12 text-indigo-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="mt-4 text-gray-400">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1);
@@ -99,36 +137,52 @@ export default function CreateAvatarPage() {
     }
   };
 
-  const handleSubmit = () => {
-    const user = getUser();
-    if (!user) return;
+  const handleSubmit = async () => {
+    try {
+      // 检查是否超过限制（最多 2 个）
+      const avatarsResponse = await fetch('/api/avatars');
+      if (avatarsResponse.ok) {
+        const avatarsData = await avatarsResponse.json();
+        if (avatarsData.avatars.length >= 2) {
+          alert('每个账户最多创建 2 个虚拟形象');
+          return;
+        }
+      }
 
-    // 检查是否超过限制（最多 2 个）
-    const avatars = JSON.parse(localStorage.getItem('deep-world-data') || '{"avatars":[]}').avatars;
-    if (avatars.length >= 2) {
-      alert('每个账户最多创建 2 个虚拟形象');
-      return;
+      // 生成随机性格 ID（1-5）
+      const randomPersonality = getRandomPersonality();
+      
+      // 调用 API 创建虚拟形象
+      const response = await fetch('/api/avatars', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          type: formData.type,
+          style: formData.style,
+          gender: formData.gender,
+          age: formData.age,
+          imageUrl: formData.imageUrl,
+          personalityId: randomPersonality.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '创建失败');
+      }
+
+      const data = await response.json();
+      console.log('✅ 虚拟形象创建成功:', data.avatar);
+
+      // 同时更新 localStorage（用于兼容）
+      addAvatar(data.avatar);
+
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error('💥 创建虚拟形象失败:', error);
+      alert(error.message || '创建失败，请重试');
     }
-
-    const newAvatar: Avatar = {
-      id: generateId(),
-      userId: user.id,
-      name: formData.name,
-      type: formData.type,
-      style: formData.style,
-      gender: formData.gender,
-      age: formData.age,
-      imageUrl: formData.imageUrl,
-      currentStatus: getRandomStatus(),
-      currentMessage: generateAIMessage(getRandomPersonality().name),
-      personality: getRandomPersonality(),
-      position: { x: Math.random() * 100, y: Math.random() * 100 },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    addAvatar(newAvatar);
-    router.push('/dashboard');
   };
 
   return (
