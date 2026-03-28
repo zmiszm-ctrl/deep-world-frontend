@@ -21,6 +21,7 @@ model User {
   pointsLogs     PointsLog[]
 
   @@index([email])
+  @@map("users")
 }
 
 // 虚拟形象表
@@ -45,6 +46,7 @@ model Avatar {
   updatedAt      DateTime    @updatedAt
 
   @@index([userId])
+  @@map("avatars")
 }
 
 // 状态表（预定义）
