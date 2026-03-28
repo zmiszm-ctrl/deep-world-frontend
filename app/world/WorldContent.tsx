@@ -40,8 +40,18 @@ export default function WorldContent() {
         const userData = await userResponse.json();
         console.log('✅ 用户已认证:', userData.user);
         
-        // 从 localStorage 获取用户的虚拟形象（兼容模式）
-        const avatars = getAvatars();
+        // 从 API 获取用户的虚拟形象
+        console.log('📡 请求 /api/avatars 获取虚拟形象列表');
+        const avatarsResponse = await fetch('/api/avatars');
+        let avatars: Avatar[] = [];
+        if (avatarsResponse.ok) {
+          const avatarsData = await avatarsResponse.json();
+          avatars = avatarsData.avatars;
+          console.log('✅ 获取到虚拟形象列表:', avatars.length);
+        } else {
+          console.warn('⚠️ 获取虚拟形象失败，使用空数组');
+        }
+        
         setUserAvatars(avatars);
 
         // 如果 URL 指定了虚拟形象，使用该形象；否则使用第一个

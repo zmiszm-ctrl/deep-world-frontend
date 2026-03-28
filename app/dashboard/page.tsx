@@ -31,9 +31,17 @@ export default function DashboardPage() {
         
         setUser(data.user);
         
-        // TODO: 稍后从 API 获取头像列表
-        const avatarsList: Avatar[] = [];
-        setAvatars(avatarsList);
+        // 从 API 获取头像列表
+        console.log('📡 请求 /api/avatars 获取虚拟形象列表');
+        const avatarsResponse = await fetch('/api/avatars');
+        if (avatarsResponse.ok) {
+          const avatarsData = await avatarsResponse.json();
+          console.log('✅ 获取到虚拟形象列表:', avatarsData.avatars);
+          setAvatars(avatarsData.avatars);
+        } else {
+          console.warn('⚠️ 获取虚拟形象失败:', await avatarsResponse.text());
+        }
+        
         setIsLoading(false);
       } catch (error) {
         console.error('💥 获取用户失败:', error);
