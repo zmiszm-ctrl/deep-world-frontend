@@ -17,38 +17,63 @@ export default function DashboardPage() {
     // 从 API 获取当前用户信息
     const fetchUser = async () => {
       try {
-        console.log('📡 请求 /api/auth/me 获取用户信息');
-        const response = await fetch('/api/auth/me');
+        console.log('📡 Dashboard: 开始请求 /api/auth/me');
+        
+        const response = await fetch('/api/auth/me', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        
+        console.log('📊 Dashboard: /api/auth/me 响应状态:', response.status);
         
         if (!response.ok) {
-          console.log('⚠️ 未授权，跳转到登录页');
+          const errorText = await response.text();
+          console.log('⚠️ Dashboard: 未授权，响应内容:', errorText);
+          console.log('🔄 Dashboard: 跳转到登录页');
           router.push('/login-new');
           return;
         }
         
         const data = await response.json();
-        console.log('✅ 获取到用户信息:', data.user);
+        console.log('✅ Dashboard: 获取到用户信息:', data.user);
         
         setUser(data.user);
         
         // 从 API 获取头像列表
-        console.log('📡 请求 /api/avatars 获取虚拟形象列表');
-        const avatarsResponse = await fetch('/api/avatars');
+        console.log('📡 Dashboard: 开始请求 /api/avatars');
+        const avatarsResponse = await fetch('/api/avatars', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        
+        console.log('📊 Dashboard: /api/avatars 响应状态:', avatarsResponse.status);
+        
         if (avatarsResponse.ok) {
           const avatarsData = await avatarsResponse.json();
-          console.log('✅ 获取到虚拟形象列表:', avatarsData.avatars);
+          console.log('✅ Dashboard: 获取到虚拟形象列表:', avatarsData.avatars);
           setAvatars(avatarsData.avatars);
         } else {
-          console.warn('⚠️ 获取虚拟形象失败:', await avatarsResponse.text());
+          const errorText = await avatarsResponse.text();
+          console.warn('⚠️ Dashboard: 获取虚拟形象失败，状态:', avatarsResponse.status, '内容:', errorText);
         }
         
+        console.log('✅ Dashboard: 加载完成，设置 isLoading = false');
         setIsLoading(false);
-      } catch (error) {
-        console.error('💥 获取用户失败:', error);
+      } catch (error: any) {
+        console.error('💥 Dashboard: 发生异常:', error);
+        console.error('💥 Dashboard: 错误堆栈:', error.stack);
+        console.error('💥 Dashboard: 错误消息:', error.message);
         router.push('/login-new');
       }
     };
     
+    console.log('🚀 Dashboard: useEffect 开始执行');
     fetchUser();
   }, [router]);
 
