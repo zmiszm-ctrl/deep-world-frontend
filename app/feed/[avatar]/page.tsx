@@ -109,6 +109,22 @@ export default function FeedPage() {
     );
   }
 
+  // 安全检查：确保关联数据存在
+  const currentStatus = avatar.currentStatus || { emoji: '😊', name: '开心' };
+  const personality = avatar.personality || { name: '活泼开朗', traits: ['友好'], color: '#FFD700' };
+  
+  // personality.traits 可能是字符串，需要解析
+  let personalityTraits: string[] = ['友好'];
+  if (typeof personality.traits === 'string') {
+    try {
+      personalityTraits = JSON.parse(personality.traits);
+    } catch (e) {
+      console.warn('解析 personality.traits 失败:', e);
+    }
+  } else if (Array.isArray(personality.traits)) {
+    personalityTraits = personality.traits;
+  }
+
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
@@ -141,11 +157,11 @@ export default function FeedPage() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-400">当前状态</span>
-                <span className="text-white">{avatar.currentStatus.emoji} {avatar.currentStatus.name}</span>
+                <span className="text-white">{currentStatus.emoji} {currentStatus.name}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">性格</span>
-                <span className="text-white">{avatar.personality.name}</span>
+                <span className="text-white">{personality.name}</span>
               </div>
               <div className="bg-white/5 rounded-lg p-4">
                 <div className="text-sm text-gray-400 mb-2">AI 消息</div>
