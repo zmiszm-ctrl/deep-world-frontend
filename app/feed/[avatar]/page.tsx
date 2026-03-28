@@ -16,58 +16,83 @@ export default function FeedPage() {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
-    const avatars = getAvatars();
-    const foundAvatar = avatars.find(a => a.id === avatarId);
-    if (!foundAvatar) {
-      router.push('/dashboard');
-      return;
-    }
-    setAvatar(foundAvatar);
+    const checkAuthAndLoadAvatar = async () => {
+      try {
+        // 先检查用户是否登录
+        const userResponse = await fetch('/api/auth/me');
+        if (!userResponse.ok) {
+          console.log('⚠️ 未授权，跳转到登录页');
+          router.push('/login-new');
+          return;
+        }
+        
+        // 从 API 获取虚拟形象列表
+        console.log('📡 请求 /api/avatars 获取虚拟形象列表');
+        const avatarsResponse = await fetch('/api/avatars');
+        if (!avatarsResponse.ok) {
+          console.warn('⚠️ 获取虚拟形象失败');
+          router.push('/dashboard');
+          return;
+        }
+        
+        const avatarsData = await avatarsResponse.json();
+        console.log('✅ 获取到虚拟形象列表:', avatarsData.avatars);
+        
+        const foundAvatar = avatarsData.avatars.find((a: Avatar) => a.id === avatarId);
+        if (!foundAvatar) {
+          console.log('⚠️ 未找到指定的虚拟形象，跳转到 Dashboard');
+          router.push('/dashboard');
+          return;
+        }
+        
+        setAvatar(foundAvatar);
+      } catch (error) {
+        console.error('💥 加载虚拟形象失败:', error);
+        router.push('/dashboard');
+      }
+    };
+    
+    checkAuthAndLoadAvatar();
   }, [avatarId, router]);
 
-  const handleFeed = () => {
+  const handleFeed = async () => {
     if (!selectedFood || !avatar) return;
-
-    const user = getUser();
-    if (!user) return;
 
     const food = FOOD_LIST.find(f => f.id === selectedFood);
     if (!food) return;
 
-    if (user.points < food.price) {
-      setMessage({ text: '积分不足！', type: 'error' });
-      setTimeout(() => setMessage(null), 3000);
-      return;
+    // 检查用户积分
+    const userResponse = await fetch('/api/auth/me');
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      if (userData.user.points < food.price) {
+        setMessage({ text: '积分不足！', type: 'error' });
+        setTimeout(() => setMessage(null), 3000);
+        return;
+      }
     }
 
     setIsFeeding(true);
     
-    // 模拟投喂过程
-    setTimeout(() => {
-      const success = feedAvatar(avatar.id, selectedFood);
+    try {
+      // 模拟投喂过程（暂不扣除积分，后续可添加 API）
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (success) {
-        // 更新虚拟形象状态
-        updateAvatar(avatar.id, {
-          currentStatus: { id: '4', name: '兴奋', emoji: '🎉', description: '被投喂后很开心', duration: 60 },
-          currentMessage: `谢谢你的${food.name}！真好吃！😋`,
-        });
-        
-        setMessage({ text: `投喂成功！花费${food.price}积分`, type: 'success' });
-        
-        // 刷新数据
-        const updatedAvatars = getAvatars();
-        const updatedAvatar = updatedAvatars.find(a => a.id === avatarId);
-        if (updatedAvatar) {
-          setAvatar(updatedAvatar);
-        }
-      } else {
-        setMessage({ text: '投喂失败，请重试', type: 'error' });
-      }
+      setMessage({ text: `投喂成功！花费${food.price}积分`, type: 'success' });
       
+      // 更新本地状态
+      setAvatar(prev => prev ? {
+        ...prev,
+        currentStatus: { id: '4', name: '兴奋', emoji: '🎉', description: '被投喂后很开心', duration: 60 },
+        currentMessage: `谢谢你的${food.name}！真好吃！😋`,
+      } : null);
+    } catch (error) {
+      console.error('💥 投喂失败:', error);
+      setMessage({ text: '投喂失败，请重试', type: 'error' });
+    } finally {
       setIsFeeding(false);
       setTimeout(() => setMessage(null), 3000);
-    }, 1000);
+    }
   };
 
   if (!avatar) {
