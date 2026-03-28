@@ -267,13 +267,18 @@ export default function WorldContent() {
           <div className="absolute inset-0 bg-black/20" />
 
           {/* 所有虚拟形象 */}
-          {allAvatars.map(avatar => (
+          {allAvatars.map(avatar => {
+            // 安全检查：确保 position 存在，否则使用默认值
+            const posX = avatar.position?.x ?? 50;
+            const posY = avatar.position?.y ?? 50;
+            
+            return (
             <div
               key={avatar.id}
               className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-1000 group"
               style={{
-                left: `${avatar.position.x}%`,
-                top: `${avatar.position.y}%`,
+                left: `${posX}%`,
+                top: `${posY}%`,
               }}
             >
               {/* 虚拟形象本体 - 变小 */}
@@ -321,7 +326,8 @@ export default function WorldContent() {
                 </div>
               )}
             </div>
-          ))}
+          );
+          })}
 
           {/* 提示信息 */}
           {!selectedAvatar && (
